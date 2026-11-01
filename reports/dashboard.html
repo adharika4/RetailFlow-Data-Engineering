@@ -1,16 +1,299 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>RetailFlow | Data Warehouse Report</title><style>
-body{font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#192638;max-width:1100px;margin:0 auto;padding:30px}
-header{background:#172e55;color:white;padding:34px;border-radius:16px}header p{color:#d6e2f8}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:22px 0}
-.kpis article,section{background:white;border-radius:13px;padding:22px;box-shadow:0 2px 8px #1122440f}
-.kpis strong{font-size:27px;display:block;color:#173f88;margin-top:7px}
-.kpis small{color:#5f6c7c}.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-img{width:100%;max-height:360px;object-fit:contain}.notice{padding:14px 18px;background:#fff3db;border-radius:8px;margin:18px 0}
-@media(max-width:750px){.charts{grid-template-columns:1fr}}
-</style></head><body><header><h1>RetailFlow</h1><p>UCI Online Retail · ETL · SQLite star schema · SQL analytics</p></header>
-<div class="notice">Input mode: <b>FULL DATASET</b>. Currency is GBP. Positive merchandise sales only; cancellations/returns and postage excluded. The bundled sample covers only the first transactions, so use the full file for meaningful trends.</div>
-<div class="kpis"><article><small>Valid merchandise lines</small><strong>528,974</strong></article><article><small>Invoices</small><strong>19,884</strong></article><article><small>Known customers</small><strong>4,338</strong></article><article><small>Gross merchandise revenue</small><strong>£10,588,582.66</strong></article></div>
-<div class="charts"><section><h2>Monthly revenue</h2><img src="monthly_revenue.png" alt="Monthly revenue chart"></section><section><h2>Geographical breakdown</h2><img src="country_revenue.png" alt="Revenue by country chart"></section></div>
-<section><h2>Methods</h2><p>Extracted real transaction records; filtered cancelled invoices, invalid quantities/prices, and postage; retained unknown customer IDs without inventing identities; loaded fact_sales and four dimensions into SQLite; produced SQL aggregates and an RFM report.</p>
-<p>Data source: Chen, D. (2015), UCI Online Retail, <a href="https://doi.org/10.24432/C5BW33">DOI: 10.24432/C5BW33</a> (CC BY 4.0).</p></section></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="description" content="RetailFlow - interactive e-commerce sales analytics on the UCI Online Retail dataset.">
+  <title>RetailFlow | Sales Analytics Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0e17;
+      --sidebar: #0d1320;
+      --panel: #111a2a;
+      --panel-raised: #152034;
+      --line: #273347;
+      --text: #f1f5fc;
+      --muted: #96a6bf;
+      --soft: #71829f;
+      --accent: #9b8cff;
+      --cyan: #5de0cf;
+      --blue: #77aaff;
+      --amber: #f5c77c;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .shell { display: grid; grid-template-columns: 238px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar { position: sticky; top: 0; height: 100vh; background: var(--sidebar); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 28px 18px 22px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 780; letter-spacing: -.7px; padding: 0 10px; }
+    .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(140deg, var(--accent), #4ccccc); color: #071421; font-weight: 900; font-size: 21px; box-shadow: 0 8px 26px #665aff25; }
+    .brand span span { color: var(--cyan); }
+    .aside-caption { text-transform: uppercase; letter-spacing: 1.7px; font-size: 10px; color: var(--soft); font-weight: 750; margin: 51px 12px 13px; }
+    .nav { display: grid; gap: 5px; }
+    .nav a { display: flex; align-items: center; gap: 12px; color: var(--muted); padding: 11px 13px; border-radius: 11px; font-weight: 560; transition: background .2s, color .2s; }
+    .nav a:hover, .nav a.active { color: var(--text); background: #26354b; }
+    .nav a.active { box-shadow: inset 3px 0 0 var(--accent); }
+    .nav svg { flex: none; opacity: .83; }
+    .aside-bottom { margin-top: auto; padding: 17px 12px 5px; border-top: 1px solid var(--line); color: var(--muted); }
+    .source-label { display: block; font-size: 10px; letter-spacing: 1.3px; color: var(--soft); font-weight: 700; margin-bottom: 7px; }
+    .aside-bottom a { display: inline-flex; align-items: center; gap: 6px; color: var(--cyan); font-size: 12px; font-weight: 650; }
+    .aside-bottom p { margin: 10px 0 0; font-size: 11px; line-height: 1.55; }
+    .main { padding: 27px clamp(20px, 3.5vw, 52px) 40px; width: 100%; max-width: 1620px; min-width: 0; margin: 0 auto; }
+    .topbar { display: flex; gap: 18px; align-items: center; justify-content: space-between; margin: 0 0 28px; }
+    .breadcrumb { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+    .breadcrumb b { color: var(--text); font-weight: 640; }
+    .dataset-pill, .status { display: inline-flex; align-items: center; gap: 8px; padding: 7px 11px; border: 1px solid #30534d; border-radius: 99px; background: #122821; color: #a1edd6; font-size: 11px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+    .dot { background: var(--cyan); width: 7px; height: 7px; border-radius: 50%; }
+    .hero { position: relative; overflow: hidden; border: 1px solid #34415b; background: radial-gradient(circle at 86% 12%, #41427e85 0, #182640 26%, transparent 49%), linear-gradient(120deg, #1b2842, #131d30 65%, #161c31); border-radius: 23px; padding: 32px 35px; display: flex; align-items: center; justify-content: space-between; gap: 28px; min-height: 188px; }
+    .hero:after { content: ""; position: absolute; right: -40px; bottom: -110px; width: 270px; height: 270px; border: 1px solid #9b8cff22; border-radius: 50%; box-shadow: 0 0 0 42px #9b8cff08, 0 0 0 85px #9b8cff06; pointer-events: none; }
+    .hero-content { z-index: 1; max-width: 650px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: 10px; font-weight: 790; color: #a6acff; }
+    h1 { margin: 11px 0 10px; letter-spacing: -1.4px; font-size: clamp(26px, 3vw, 38px); line-height: 1.17; font-weight: 780; }
+    .hero p { margin: 0; color: #b7c5df; font-size: 13px; line-height: 1.75; }
+    .hero-aside { position: relative; z-index: 1; border: 1px solid #7583ac70; background: #182741af; padding: 17px 20px; border-radius: 15px; min-width: 194px; backdrop-filter: blur(8px); }
+    .hero-aside .label { display: block; color: #bbc6e3; text-transform: uppercase; letter-spacing: 1px; font-size: 10px; margin-bottom: 8px; }
+    .hero-aside strong { display: block; font-size: 18px; letter-spacing: -.5px; }
+    .hero-aside small { color: #abb8d4; font-size: 11px; display: block; margin-top: 2px; }
+    .section-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin: 32px 0 15px; }
+    .section-top h2, .card h2 { font-size: 17px; letter-spacing: -.4px; line-height: 1.3; margin: 0; font-weight: 720; }
+    .subline { color: var(--soft); font-size: 12px; margin: 4px 0 0; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; }
+    .kpi { position: relative; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 19px 21px 17px; min-width: 0; }
+    .kpi:before { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 2px; background: var(--stripe, var(--accent)); opacity: .8; }
+    .kpi-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); font-weight: 560; font-size: 12px; }
+    .iconbox { border: 1px solid #ffffff14; background: #ffffff07; border-radius: 10px; width: 34px; height: 34px; display: grid; place-items: center; font-size: 16px; }
+    .kpi strong { display: block; font-size: clamp(23px, 2.45vw, 32px); line-height: 1.25; font-weight: 780; letter-spacing: -1.1px; margin-top: 12px; font-variant-numeric: tabular-nums; }
+    .kpi small { display: block; color: var(--soft); font-size: 11px; margin-top: 6px; }
+    .two-col { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(315px, 1fr); gap: 17px; margin-top: 18px; }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 23px 24px; min-width: 0; scroll-margin-top: 28px; }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 13px; margin-bottom: 20px; }
+    .card-header p { margin: 5px 0 0; font-size: 12px; color: var(--soft); }
+    .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    select, .search { background: #1b2940; border: 1px solid #35445d; border-radius: 9px; color: #e4eafa; padding: 9px 12px; font-size: 12px; outline: none; }
+    select { padding-right: 24px; }
+    .export { color: #b9b2ff; font-size: 12px; font-weight: 650; padding: 8px 0 8px 7px; }
+    .export:hover, .link:hover { color: white; }
+    .chart { position: relative; height: 269px; padding: 14px 0 12px; }
+    .gridlines { position: absolute; inset: 15px 0 35px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+    .gridlines span { border-top: 1px dashed #40506975; width: 100%; }
+    .bars { position: absolute; inset: 13px 0 0; display: flex; align-items: flex-end; gap: clamp(5px, .9vw, 13px); padding: 0 3px; }
+    .bar-col { position: relative; z-index: 1; height: 100%; min-width: 0; flex: 1; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; }
+    .bar-area { display: flex; align-items: flex-end; height: calc(100% - 30px); width: 100%; position: relative; }
+    .bar { display: block; width: 100%; min-height: 3px; border-radius: 7px 7px 2px 2px; background: linear-gradient(0deg, #5f6ccc, #a49aff); transition: height .35s, filter .2s; cursor: default; position: relative; }
+    .bar-col:hover .bar, .bar:focus { filter: brightness(1.3); }
+    .bar:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    .bar-col:nth-child(3n) .bar { background: linear-gradient(0deg, #397aa0, #62d8df); }
+    .bar-col:nth-child(5n) .bar { background: linear-gradient(0deg, #7861bc, #c4a1ff); }
+    .bar-col label { font-size: 10px; color: var(--soft); height: 29px; text-align: center; padding-top: 11px; cursor: default; }
+    .bar-tip { pointer-events: none; opacity: 0; position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 9px); transform: translateX(-50%) translateY(5px); white-space: nowrap; background: #ecf1fb; color: #101829; border-radius: 9px; padding: 7px 10px; box-shadow: 0 12px 30px #0007; font-weight: 700; font-size: 11px; transition: opacity .14s, transform .14s; }
+    .bar-col:hover .bar-tip, .bar:focus + .bar-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .chart-note { margin: 12px 0 0; font-size: 11px; color: var(--soft); }
+    .country-list { display: grid; gap: 15px; }
+    .country-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; }
+    .country-head strong { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 700; }
+    .country-name { display: flex; gap: 10px; align-items: center; font-weight: 580; }
+    .rank { font-size: 10px; color: #9daec8; background: #233047; padding: 3px 6px; border-radius: 6px; }
+    .track { width: 100%; height: 7px; margin-top: 8px; border-radius: 10px; background: #263449; overflow: hidden; }
+    .fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #766af3, #5adcca); }
+    .country-footnote { color: var(--soft); font-size: 11px; margin-top: 17px; }
+    .table-panel { margin-top: 18px; }
+    .search { width: 212px; max-width: 100%; }
+    .table-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 570px; text-align: left; font-size: 12px; }
+    thead { background: #182438; }
+    th { text-transform: uppercase; font-size: 10px; letter-spacing: 1.15px; font-weight: 720; color: #91a0ba; padding: 13px 12px; }
+    th:first-child { border-radius: 9px 0 0 9px; }
+    th:last-child { border-radius: 0 9px 9px 0; }
+    td { padding: 14px 12px; color: #d8e3f3; border-bottom: 1px solid #263246; }
+    tbody tr:last-child td { border: 0; }
+    tbody tr:hover { background: #19273c; }
+    th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .product-name { font-weight: 620; color: #f0f4fc; }
+    .product-code { color: var(--soft); font-size: 11px; }
+    .table-bottom { color: var(--soft); font-size: 11px; padding-top: 11px; }
+    .method { margin-top: 18px; padding: 20px 24px; display: flex; align-items: flex-start; gap: 17px; }
+    .method .method-icon { width: 36px; height: 36px; flex: none; border-radius: 11px; display: grid; place-items: center; background: #263452; color: var(--cyan); font-size: 19px; }
+    .method p { margin: 6px 0 0; color: var(--muted); font-size: 12px; max-width: 900px; line-height: 1.75; }
+    .method a { color: var(--cyan); text-decoration: underline; text-underline-offset: 3px; }
+    footer { padding: 26px 0 0; display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; color: var(--soft); font-size: 11px; }
+    .sr-only { border: 0; clip: rect(0,0,0,0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; white-space: nowrap; }
+    @media (max-width: 1180px) { .shell { grid-template-columns: 196px minmax(0, 1fr); } .sidebar { padding-inline: 13px; } .two-col { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 760px) {
+      .shell { display: block; } .sidebar { position: static; height: auto; padding: 12px 18px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .brand { font-size: 17px; } .brand-mark { width: 32px; height: 32px; font-size: 17px; } .aside-caption, .aside-bottom { display: none; }
+      .nav { display: flex; gap: 4px; overflow-x: auto; padding-top: 11px; } .nav a { padding: 7px 10px; flex: none; font-size: 11px; } .nav svg { display: none; }
+      .main { padding: 20px 16px 28px; } .topbar { margin-bottom: 15px; } .hero { padding: 25px 22px; } .hero-aside { display: none; } .section-top { margin-top: 25px; }
+      .card { padding: 20px 16px; } .kpi { padding: 17px; } .kpi strong { font-size: 25px; }
+      .bars { gap: 5px; } .bar-col label { font-size: 9px; }
+    }
+    @media (max-width: 420px) {
+      .kpi-grid { gap: 10px; } .kpi { padding: 13px; } .kpi-top { font-size: 10px; } .kpi strong { font-size: 21px; }
+      .chart { height: 226px; } .bar-col label { writing-mode: vertical-rl; transform: rotate(180deg); height: 35px; padding: 7px 0 0; font-size: 9px; }
+      .bar-area { height: calc(100% - 38px); } .search { width: 100%; } .controls { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *:before, *:after { transition: none !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="RetailFlow overview"><span class="brand-mark">R</span><span>Retail<span>Flow</span></span></a>
+      <div class="aside-caption">Workspace</div>
+      <nav class="nav" aria-label="Dashboard navigation">
+        <a class="active" href="#overview" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>Overview</a>
+        <a href="#trends"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 3 8-9"/><path d="M15 5h6v6"/></svg>Sales trends</a>
+        <a href="#markets"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18"/></svg>Markets</a>
+        <a href="#products"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></svg>Top products</a>
+        <a href="#methodology"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Methodology</a>
+      </nav>
+      <div class="aside-bottom"><span class="source-label">DATA SOURCE</span><a href="https://archive.ics.uci.edu/dataset/352/online+retail" target="_blank" rel="noopener noreferrer">UCI Online Retail ↗</a><p>Historical transactions from 2010–2011. This is a portfolio analytics dashboard, not live commerce data.</p></div>
+    </aside>
+    <main class="main" id="overview">
+      <div class="topbar"><div class="breadcrumb"><span>Analytics</span><span>/</span><b>Overview</b></div><span class="dataset-pill"><span class="dot"></span><span id="modeBadge">Dataset loaded</span></span></div>
+      <header class="hero"><div class="hero-content"><div class="eyebrow">Retail intelligence / historical dataset</div><h1>Sales overview, at a glance.</h1><p>Explore e-commerce transactions, revenue patterns, top products, and customer behavior — all powered by a Python ETL pipeline and SQL warehouse.</p></div><div class="hero-aside"><span class="label">Reporting period</span><strong>Dec 2010 – Dec 2011</strong><small>UCI Online Retail · United Kingdom</small></div></header>
+
+      <div class="section-top"><div><h2>Performance snapshot</h2><p class="subline">Positive merchandise sales · GBP</p></div><span class="subline">Historical dataset, not live data</span></div>
+      <section class="kpi-grid" aria-label="Key performance indicators">
+        <div class="kpi" style="--stripe:var(--accent)"><div class="kpi-top">Merchandise revenue <span class="iconbox" aria-hidden="true">£</span></div><strong id="kpiRevenue">—</strong><small>Before returns / cancellation adjustments</small></div>
+        <div class="kpi" style="--stripe:var(--cyan)"><div class="kpi-top">Distinct invoices <span class="iconbox" aria-hidden="true">≡</span></div><strong id="kpiInvoices">—</strong><small>Non-cancelled merchandise invoices</small></div>
+        <div class="kpi" style="--stripe:var(--blue)"><div class="kpi-top">Valid sales lines <span class="iconbox" aria-hidden="true">◫</span></div><strong id="kpiLines">—</strong><small>After cleaning and validation</small></div>
+        <div class="kpi" style="--stripe:var(--amber)"><div class="kpi-top">Known customers <span class="iconbox" aria-hidden="true">♙</span></div><strong id="kpiCustomers">—</strong><small>Distinct identified customer IDs</small></div>
+      </section>
+
+      <div class="two-col">
+        <section class="card" id="trends" aria-labelledby="trendHeading">
+          <div class="card-header"><div><h2 id="trendHeading">Monthly performance</h2><p>Compare revenue, invoices and units across months</p></div><div class="controls"><label class="sr-only" for="trendMetric">Chart metric</label><select id="trendMetric"><option value="revenue_gbp">Revenue (£)</option><option value="orders">Invoices</option><option value="units_sold">Units sold</option></select><a class="export" href="monthly_revenue.csv" download>Export CSV ↗</a></div></div>
+          <div class="chart" aria-label="Monthly performance bar chart"><div class="gridlines" aria-hidden="true"><span></span><span></span><span></span><span></span></div><div class="bars" id="trendBars"></div></div>
+          <p class="chart-note" id="trendNote">Hover or focus a bar for exact values.</p>
+        </section>
+        <section class="card" id="markets" aria-labelledby="marketHeading">
+          <div class="card-header"><div><h2 id="marketHeading">Top markets</h2><p>Share of positive merchandise revenue</p></div><a class="export" href="country_revenue.csv" download>Export CSV ↗</a></div>
+          <div id="countryList" class="country-list"></div>
+          <p class="country-footnote">Bars show each market's share of total revenue. Country totals are not normalized for population.</p>
+        </section>
+      </div>
+
+      <section class="card table-panel" id="products" aria-labelledby="productsHeading">
+        <div class="card-header"><div><h2 id="productsHeading">Top-performing products</h2><p>Highest revenue items in the report</p></div><div class="controls"><label class="sr-only" for="productSearch">Search products</label><input id="productSearch" class="search" type="search" placeholder="Search product or code…" autocomplete="off" aria-controls="productTable"><a class="export" href="top_products.csv" download>Export CSV ↗</a></div></div>
+        <div class="table-scroll"><table id="productTable"><thead><tr><th scope="col">#</th><th scope="col">Product</th><th scope="col" class="num">Units sold</th><th scope="col" class="num">Revenue</th></tr></thead><tbody id="productRows"></tbody></table></div>
+        <div class="table-bottom" id="productCount" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="card method" id="methodology"><span class="method-icon" aria-hidden="true">◇</span><div><h2>About this analysis</h2><p>The ETL pipeline cleans transaction records, excludes cancelled invoices, nonpositive quantities/prices and POST postage entries, and loads eligible merchandise lines into a SQLite star schema. Missing customer IDs are preserved as unknown, rather than invented. Figures reflect positive merchandise sales, <strong>not</strong> net revenue after returns. Data: <a href="https://doi.org/10.24432/C5BW33" target="_blank" rel="noopener noreferrer">UCI Online Retail (Chen, 2015)</a>, CC BY 4.0.</p></div></section>
+      <footer><span>RetailFlow · Data engineering portfolio project</span><span>Python · Pandas · SQLite · SQL analytics</span></footer>
+    </main>
+  </div>
+  <script type="application/json" id="dashboardData">{"mode":"FULL DATASET","stats":{"sale_lines":528974,"invoices":19884,"identified_customers":4338,"products":3920,"revenue_gbp":"10,588,582.66"},"monthly":[{"month":"2010-12","revenue_gbp":819316.14,"orders":1557,"units_sold":359019},{"month":"2011-01","revenue_gbp":686226.13,"orders":1084,"units_sold":387534},{"month":"2011-02","revenue_gbp":520465.89,"orders":1099,"units_sold":283401},{"month":"2011-03","revenue_gbp":712301.79,"orders":1450,"units_sold":377286},{"month":"2011-04","revenue_gbp":534398.67,"orders":1244,"units_sold":308679},{"month":"2011-05","revenue_gbp":757177.27,"orders":1678,"units_sold":395495},{"month":"2011-06","revenue_gbp":756203.42,"orders":1529,"units_sold":388971},{"month":"2011-07","revenue_gbp":713896.54,"orders":1470,"units_sold":401552},{"month":"2011-08","revenue_gbp":753779.78,"orders":1346,"units_sold":421527},{"month":"2011-09","revenue_gbp":1052692.95,"orders":1826,"units_sold":570537},{"month":"2011-10","revenue_gbp":1146953.34,"orders":2023,"units_sold":623052},{"month":"2011-11","revenue_gbp":1499143.35,"orders":2761,"units_sold":754045},{"month":"2011-12","revenue_gbp":636027.39,"orders":817,"units_sold":314124}],"countries":[{"country":"United Kingdom","invoices":17979,"revenue_gbp":9016315.14},{"country":"Netherlands","invoices":93,"revenue_gbp":283889.34},{"country":"EIRE","invoices":288,"revenue_gbp":283453.96},{"country":"Germany","invoices":449,"revenue_gbp":207866.14},{"country":"France","invoices":387,"revenue_gbp":194261.11},{"country":"Australia","invoices":56,"revenue_gbp":138171.31},{"country":"Spain","invoices":88,"revenue_gbp":55725.11},{"country":"Switzerland","invoices":50,"revenue_gbp":53087.9},{"country":"Japan","invoices":19,"revenue_gbp":37416.37},{"country":"Belgium","invoices":98,"revenue_gbp":36927.34},{"country":"Sweden","invoices":34,"revenue_gbp":36869.33},{"country":"Norway","invoices":33,"revenue_gbp":33294.94},{"country":"Portugal","invoices":56,"revenue_gbp":31239.1},{"country":"Singapore","invoices":7,"revenue_gbp":21279.29},{"country":"Channel Islands","invoices":26,"revenue_gbp":20450.44},{"country":"Finland","invoices":41,"revenue_gbp":18896.08},{"country":"Denmark","invoices":18,"revenue_gbp":18211.34},{"country":"Italy","invoices":35,"revenue_gbp":15820.24},{"country":"Hong Kong","invoices":10,"revenue_gbp":15516.8},{"country":"Cyprus","invoices":15,"revenue_gbp":13575.38},{"country":"Austria","invoices":17,"revenue_gbp":8742.68},{"country":"Israel","invoices":8,"revenue_gbp":8135.26},{"country":"Poland","invoices":19,"revenue_gbp":6974.65},{"country":"Unspecified","invoices":13,"revenue_gbp":4749.79},{"country":"Greece","invoices":5,"revenue_gbp":4425.52},{"country":"Iceland","invoices":7,"revenue_gbp":4310},{"country":"USA","invoices":5,"revenue_gbp":3580.39},{"country":"Canada","invoices":5,"revenue_gbp":3115.44},{"country":"Malta","invoices":5,"revenue_gbp":2070.59},{"country":"United Arab Emirates","invoices":2,"revenue_gbp":1864.78},{"country":"Lebanon","invoices":1,"revenue_gbp":1693.88},{"country":"Lithuania","invoices":4,"revenue_gbp":1661.06},{"country":"European Community","invoices":3,"revenue_gbp":1159.25},{"country":"Brazil","invoices":1,"revenue_gbp":1143.6},{"country":"RSA","invoices":1,"revenue_gbp":1002.31},{"country":"Czech Republic","invoices":2,"revenue_gbp":786.74},{"country":"Bahrain","invoices":3,"revenue_gbp":754.14},{"country":"Saudi Arabia","invoices":1,"revenue_gbp":145.92}],"products":[{"stock_code":"DOT","product_name":"DOTCOM POSTAGE","units_sold":706,"revenue_gbp":206248.77},{"stock_code":"22423","product_name":"REGENCY CAKESTAND 3 TIER","units_sold":13879,"revenue_gbp":174484.74},{"stock_code":"23843","product_name":"PAPER CRAFT , LITTLE BIRDIE","units_sold":80995,"revenue_gbp":168469.6},{"stock_code":"85123A","product_name":"WHITE HANGING HEART T-LIGHT HOLDER","units_sold":37660,"revenue_gbp":104518.8},{"stock_code":"47566","product_name":"PARTY BUNTING","units_sold":18295,"revenue_gbp":99504.33},{"stock_code":"85099B","product_name":"JUMBO BAG RED RETROSPOT","units_sold":48474,"revenue_gbp":94340.05},{"stock_code":"23166","product_name":"MEDIUM CERAMIC TOP STORAGE JAR","units_sold":78033,"revenue_gbp":81700.92},{"stock_code":"M","product_name":"Manual","units_sold":7224,"revenue_gbp":78110.27},{"stock_code":"23084","product_name":"RABBIT NIGHT LIGHT","units_sold":30788,"revenue_gbp":66964.99},{"stock_code":"22086","product_name":"PAPER CHAIN KIT 50'S CHRISTMAS","units_sold":19355,"revenue_gbp":64952.29}]}</script>
+  <script>
+    (function () {
+      "use strict";
+      var d = JSON.parse(document.getElementById("dashboardData").textContent);
+      var gbp = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
+      var intFmt = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
+      var compact = new Intl.NumberFormat("en-GB", { notation: "compact", maximumFractionDigits: 1 });
+      var stats = d.stats || {};
+      var money = Number(String(stats.revenue_gbp || "0").replace(/,/g, ""));
+      document.getElementById("kpiRevenue").textContent = gbp.format(money);
+      document.getElementById("kpiInvoices").textContent = intFmt.format(Number(stats.invoices || 0));
+      document.getElementById("kpiLines").textContent = intFmt.format(Number(stats.sale_lines || 0));
+      document.getElementById("kpiCustomers").textContent = intFmt.format(Number(stats.identified_customers || 0));
+      var isFull = d.mode === "FULL DATASET";
+      document.getElementById("modeBadge").textContent = isFull ? "FULL DATASET" : "SMALL REAL SAMPLE";
+      if (!isFull) {
+        document.getElementById("trendNote").textContent = "Sample-mode charts use only 48 genuine source lines; trends are illustrative, not representative.";
+      }
+      function make(tag, cls, content) {
+        var node = document.createElement(tag);
+        if (cls) node.className = cls;
+        if (content !== undefined && content !== null) node.textContent = String(content);
+        return node;
+      }
+      function renderTrends() {
+        var metric = document.getElementById("trendMetric").value;
+        var rows = d.monthly || [];
+        var max = Math.max(1, ...rows.map(function (r) { return Number(r[metric]) || 0; }));
+        var wrap = document.getElementById("trendBars");
+        wrap.replaceChildren();
+        rows.forEach(function (r) {
+          var value = Number(r[metric]) || 0;
+          var col = make("div", "bar-col");
+          var area = make("div", "bar-area");
+          var bar = make("div", "bar");
+          bar.style.height = String(Math.max(2, (value / max) * 94)) + "%";
+          bar.setAttribute("tabindex", "0");
+          var exact = metric === "revenue_gbp" ? gbp.format(value) : intFmt.format(value);
+          var label = new Date(String(r.month) + "-01T12:00:00").toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+          bar.setAttribute("aria-label", label + ": " + exact);
+          var tip = make("span", "bar-tip", exact);
+          area.append(bar, tip);
+          col.append(area, make("label", "", rows.length > 6 ? String(r.month).slice(5, 7) + "/" + String(r.month).slice(2, 4) : label));
+          wrap.appendChild(col);
+        });
+        if (isFull && rows.length) {
+          var peak = rows.reduce(function(a,b) { return Number(a[metric]) >= Number(b[metric]) ? a : b; });
+          var amount = metric === "revenue_gbp" ? gbp.format(Number(peak[metric])) : compact.format(Number(peak[metric]));
+          document.getElementById("trendNote").textContent = "Peak month: " + peak.month + " · " + amount + ". Focus or hover a bar for exact values.";
+        }
+      }
+      function renderCountries() {
+        var wrap = document.getElementById("countryList");
+        wrap.replaceChildren();
+        (d.countries || []).slice(0, 6).forEach(function (r, i) {
+          var value = Number(r.revenue_gbp) || 0;
+          var percent = money ? value / money * 100 : 0;
+          var item = make("div", "country");
+          var head = make("div", "country-head");
+          var name = make("div", "country-name");
+          name.append(make("span", "rank", String(i + 1).padStart(2, "0")), make("span", "", r.country));
+          var detail = make("strong", "", gbp.format(value));
+          head.append(name, detail);
+          var track = make("div", "track");
+          var fill = make("div", "fill");
+          fill.style.width = Math.max(.5, percent) + "%";
+          track.setAttribute("role", "img");
+          track.setAttribute("aria-label", r.country + ": " + percent.toFixed(1) + "% of total revenue");
+          track.appendChild(fill);
+          item.append(head, track);
+          wrap.appendChild(item);
+        });
+      }
+      function renderProducts() {
+        var term = document.getElementById("productSearch").value.trim().toLowerCase();
+        var rows = (d.products || []).filter(function (r) {
+          return String(r.product_name || "").toLowerCase().includes(term) || String(r.stock_code || "").toLowerCase().includes(term);
+        });
+        var tbody = document.getElementById("productRows");
+        tbody.replaceChildren();
+        rows.forEach(function (r, i) {
+          var tr = make("tr", "");
+          var product = make("td", "");
+          product.append(make("div", "product-name", r.product_name), make("div", "product-code", r.stock_code));
+          tr.append(make("td", "", i + 1), product, make("td", "num", intFmt.format(Number(r.units_sold || 0))), make("td", "num", gbp.format(Number(r.revenue_gbp || 0))));
+          tbody.appendChild(tr);
+        });
+        if (!rows.length) {
+          var empty = make("tr", ""); var cell = make("td", "", "No matching products found.");
+          cell.colSpan = 4; cell.style.textAlign = "center"; empty.appendChild(cell); tbody.appendChild(empty);
+        }
+        document.getElementById("productCount").textContent = "Showing " + rows.length + " of " + (d.products || []).length + " top products";
+      }
+      document.getElementById("trendMetric").addEventListener("change", renderTrends);
+      document.getElementById("productSearch").addEventListener("input", renderProducts);
+      document.querySelectorAll(".nav a").forEach(function (link) {
+        link.addEventListener("click", function () {
+          document.querySelectorAll(".nav a").forEach(function (a) { a.classList.remove("active"); a.removeAttribute("aria-current"); });
+          link.classList.add("active"); link.setAttribute("aria-current", "page");
+        });
+      });
+      renderTrends(); renderCountries(); renderProducts();
+    }());
+  </script>
+</body>
+</html>
