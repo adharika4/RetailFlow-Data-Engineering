@@ -21,6 +21,18 @@ RetailFlow processes the [UCI Online Retail dataset](https://archive.ics.uci.edu
 
 These results come from a completed full-dataset run. Revenue represents **positive merchandise sales**, not net sales after refunds; cancellation invoices and postage lines are excluded.
 
+## Interactive dashboard
+
+The generated [sales dashboard](reports/dashboard.html) uses a responsive, dark interface and works locally without a web server or external JavaScript libraries.
+
+- KPI cards for positive line revenue, invoices, validated sales lines, and identified customers
+- Interactive monthly chart: switch between revenue, invoice counts, and units sold
+- Top markets ranked by revenue, with percentage-share bars
+- Searchable top-revenue stock-code table and downloadable CSV reports
+- Full-dataset results embedded in the checked-in dashboard; rerunning the pipeline refreshes the dashboard from SQL reports
+
+After running the pipeline, open `reports/dashboard.html` in your browser. GitHub displays HTML files as code, so open the downloaded file locally to interact with it.
+
 ## Data pipeline
 
 ```text
