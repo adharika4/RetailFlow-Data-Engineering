@@ -93,7 +93,7 @@
     .bar-col:nth-child(5n) .bar { background: linear-gradient(0deg, #7861bc, #c4a1ff); }
     .bar-col label { font-size: 10px; color: var(--soft); height: 29px; text-align: center; padding-top: 11px; cursor: default; }
     .bar-tip { pointer-events: none; opacity: 0; position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 9px); transform: translateX(-50%) translateY(5px); white-space: nowrap; background: #ecf1fb; color: #101829; border-radius: 9px; padding: 7px 10px; box-shadow: 0 12px 30px #0007; font-weight: 700; font-size: 11px; transition: opacity .14s, transform .14s; }
-    .bar-col:hover .bar-tip, .bar:focus + .bar-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .bar-col:hover .bar-tip, .bar:focus .bar-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
     .chart-note { margin: 12px 0 0; font-size: 11px; color: var(--soft); }
     .country-list { display: grid; gap: 15px; }
     .country-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; }
@@ -150,18 +150,18 @@
         <a class="active" href="#overview" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>Overview</a>
         <a href="#trends"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 3 8-9"/><path d="M15 5h6v6"/></svg>Sales trends</a>
         <a href="#markets"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18"/></svg>Markets</a>
-        <a href="#products"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></svg>Top products</a>
+        <a href="#products"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></svg>Top items</a>
         <a href="#methodology"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Methodology</a>
       </nav>
       <div class="aside-bottom"><span class="source-label">DATA SOURCE</span><a href="https://archive.ics.uci.edu/dataset/352/online+retail" target="_blank" rel="noopener noreferrer">UCI Online Retail ↗</a><p>Historical transactions from 2010–2011. This is a portfolio analytics dashboard, not live commerce data.</p></div>
     </aside>
     <main class="main" id="overview">
       <div class="topbar"><div class="breadcrumb"><span>Analytics</span><span>/</span><b>Overview</b></div><span class="dataset-pill"><span class="dot"></span><span id="modeBadge">Dataset loaded</span></span></div>
-      <header class="hero"><div class="hero-content"><div class="eyebrow">Retail intelligence / historical dataset</div><h1>Sales overview, at a glance.</h1><p>Explore e-commerce transactions, revenue patterns, top products, and customer behavior — all powered by a Python ETL pipeline and SQL warehouse.</p></div><div class="hero-aside"><span class="label">Reporting period</span><strong>Dec 2010 – Dec 2011</strong><small>UCI Online Retail · United Kingdom</small></div></header>
+      <header class="hero"><div class="hero-content"><div class="eyebrow">Retail intelligence / historical dataset</div><h1>Sales overview, at a glance.</h1><p>Explore e-commerce transactions, revenue patterns, top products, and customer behavior — all powered by a Python ETL pipeline and SQL warehouse.</p></div><div class="hero-aside"><span class="label">Reporting period</span><strong id="reportingPeriod">Dec 2010 – Dec 2011</strong><small>UCI Online Retail · United Kingdom</small></div></header>
 
-      <div class="section-top"><div><h2>Performance snapshot</h2><p class="subline">Positive merchandise sales · GBP</p></div><span class="subline">Historical dataset, not live data</span></div>
+      <div class="section-top"><div><h2>Performance snapshot</h2><p class="subline">Validated positive sales lines · GBP</p></div><span class="subline">Historical dataset, not live data</span></div>
       <section class="kpi-grid" aria-label="Key performance indicators">
-        <div class="kpi" style="--stripe:var(--accent)"><div class="kpi-top">Merchandise revenue <span class="iconbox" aria-hidden="true">£</span></div><strong id="kpiRevenue">—</strong><small>Before returns / cancellation adjustments</small></div>
+        <div class="kpi" style="--stripe:var(--accent)"><div class="kpi-top">Positive line revenue <span class="iconbox" aria-hidden="true">£</span></div><strong id="kpiRevenue">—</strong><small>Not net revenue after refunds</small></div>
         <div class="kpi" style="--stripe:var(--cyan)"><div class="kpi-top">Distinct invoices <span class="iconbox" aria-hidden="true">≡</span></div><strong id="kpiInvoices">—</strong><small>Non-cancelled merchandise invoices</small></div>
         <div class="kpi" style="--stripe:var(--blue)"><div class="kpi-top">Valid sales lines <span class="iconbox" aria-hidden="true">◫</span></div><strong id="kpiLines">—</strong><small>After cleaning and validation</small></div>
         <div class="kpi" style="--stripe:var(--amber)"><div class="kpi-top">Known customers <span class="iconbox" aria-hidden="true">♙</span></div><strong id="kpiCustomers">—</strong><small>Distinct identified customer IDs</small></div>
@@ -181,12 +181,12 @@
       </div>
 
       <section class="card table-panel" id="products" aria-labelledby="productsHeading">
-        <div class="card-header"><div><h2 id="productsHeading">Top-performing products</h2><p>Highest revenue items in the report</p></div><div class="controls"><label class="sr-only" for="productSearch">Search products</label><input id="productSearch" class="search" type="search" placeholder="Search product or code…" autocomplete="off" aria-controls="productTable"><a class="export" href="top_products.csv" download>Export CSV ↗</a></div></div>
+        <div class="card-header"><div><h2 id="productsHeading">Top revenue items</h2><p>Highest revenue stock codes, including source service entries</p></div><div class="controls"><label class="sr-only" for="productSearch">Search products</label><input id="productSearch" class="search" type="search" placeholder="Search product or code…" autocomplete="off" aria-controls="productTable"><a class="export" href="top_products.csv" download>Export CSV ↗</a></div></div>
         <div class="table-scroll"><table id="productTable"><thead><tr><th scope="col">#</th><th scope="col">Product</th><th scope="col" class="num">Units sold</th><th scope="col" class="num">Revenue</th></tr></thead><tbody id="productRows"></tbody></table></div>
         <div class="table-bottom" id="productCount" role="status" aria-live="polite"></div>
       </section>
 
-      <section class="card method" id="methodology"><span class="method-icon" aria-hidden="true">◇</span><div><h2>About this analysis</h2><p>The ETL pipeline cleans transaction records, excludes cancelled invoices, nonpositive quantities/prices and POST postage entries, and loads eligible merchandise lines into a SQLite star schema. Missing customer IDs are preserved as unknown, rather than invented. Figures reflect positive merchandise sales, <strong>not</strong> net revenue after returns. Data: <a href="https://doi.org/10.24432/C5BW33" target="_blank" rel="noopener noreferrer">UCI Online Retail (Chen, 2015)</a>, CC BY 4.0.</p></div></section>
+      <section class="card method" id="methodology"><span class="method-icon" aria-hidden="true">◇</span><div><h2>About this analysis</h2><p>The ETL pipeline excludes cancelled invoices, invalid quantities/prices and POST postage entries, then loads validated positive sales lines into a SQLite star schema. Unknown customer IDs are preserved. Some other service or adjustment stock codes may remain (for example DOTCOM POSTAGE). Reported revenue is <strong>not</strong> net revenue after refunds. Data: <a href="https://doi.org/10.24432/C5BW33" target="_blank" rel="noopener noreferrer">UCI Online Retail (Chen, 2015)</a>, CC BY 4.0.</p></div></section>
       <footer><span>RetailFlow · Data engineering portfolio project</span><span>Python · Pandas · SQLite · SQL analytics</span></footer>
     </main>
   </div>
@@ -205,6 +205,12 @@
       document.getElementById("kpiLines").textContent = intFmt.format(Number(stats.sale_lines || 0));
       document.getElementById("kpiCustomers").textContent = intFmt.format(Number(stats.identified_customers || 0));
       var isFull = d.mode === "FULL DATASET";
+      var periodMonths = d.monthly || [];
+      if (periodMonths.length) {
+        var firstMonth = periodMonths[0].month;
+        var lastMonth = periodMonths[periodMonths.length - 1].month;
+        document.getElementById("reportingPeriod").textContent = firstMonth + (lastMonth === firstMonth ? "" : " – " + lastMonth);
+      }
       document.getElementById("modeBadge").textContent = isFull ? "FULL DATASET" : "SMALL REAL SAMPLE";
       if (!isFull) {
         document.getElementById("trendNote").textContent = "Sample-mode charts use only 48 genuine source lines; trends are illustrative, not representative.";
@@ -232,7 +238,7 @@
           var label = new Date(String(r.month) + "-01T12:00:00").toLocaleDateString("en-GB", { month: "short", year: "numeric" });
           bar.setAttribute("aria-label", label + ": " + exact);
           var tip = make("span", "bar-tip", exact);
-          area.append(bar, tip);
+          bar.appendChild(tip); area.appendChild(bar);
           col.append(area, make("label", "", rows.length > 6 ? String(r.month).slice(5, 7) + "/" + String(r.month).slice(2, 4) : label));
           wrap.appendChild(col);
         });
