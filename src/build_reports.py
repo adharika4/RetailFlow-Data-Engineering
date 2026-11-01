@@ -54,22 +54,16 @@ def build():
     stats = {"sale_lines": n_sales, "invoices": n_orders, "identified_customers": n_cust,
              "products": n_products, "revenue_gbp": f"{revenue_pence/100:,.2f}"}
     (REPORTS / "dashboard_stats.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
-    html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>RetailFlow | Data Warehouse Report</title><style>
-body{{font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#192638;max-width:1100px;margin:0 auto;padding:30px}}
-header{{background:#172e55;color:white;padding:34px;border-radius:16px}}header p{{color:#d6e2f8}}
-.kpis{{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:22px 0}}
-.kpis article,section{{background:white;border-radius:13px;padding:22px;box-shadow:0 2px 8px #1122440f}}
-.kpis strong{{font-size:27px;display:block;color:#173f88;margin-top:7px}}
-.kpis small{{color:#5f6c7c}}.charts{{display:grid;grid-template-columns:1fr 1fr;gap:18px}}
-img{{width:100%;max-height:360px;object-fit:contain}}.notice{{padding:14px 18px;background:#fff3db;border-radius:8px;margin:18px 0}}
-@media(max-width:750px){{.charts{{grid-template-columns:1fr}}}}
-</style></head><body><header><h1>RetailFlow</h1><p>UCI Online Retail · ETL · SQLite star schema · SQL analytics</p></header>
-<div class="notice">Input mode: <b>{escape(mode)}</b>. Currency is GBP. Positive merchandise sales only; cancellations/returns and postage excluded. The bundled sample covers only the first transactions, so use the full file for meaningful trends.</div>
-<div class="kpis"><article><small>Valid merchandise lines</small><strong>{n_sales:,}</strong></article><article><small>Invoices</small><strong>{n_orders:,}</strong></article><article><small>Known customers</small><strong>{n_cust:,}</strong></article><article><small>Gross merchandise revenue</small><strong>£{stats['revenue_gbp']}</strong></article></div>
-<div class="charts"><section><h2>Monthly revenue</h2><img src="monthly_revenue.png" alt="Monthly revenue chart"></section><section><h2>Geographical breakdown</h2><img src="country_revenue.png" alt="Revenue by country chart"></section></div>
-<section><h2>Methods</h2><p>Extracted real transaction records; filtered cancelled invoices, invalid quantities/prices, and postage; retained unknown customer IDs without inventing identities; loaded fact_sales and four dimensions into SQLite; produced SQL aggregates and an RFM report.</p>
-<p>Data source: Chen, D. (2015), UCI Online Retail, <a href="https://doi.org/10.24432/C5BW33">DOI: 10.24432/C5BW33</a> (CC BY 4.0).</p></section></body></html>'''
+    dashboard_data = {
+        "mode": mode,
+        "stats": stats,
+        "monthly": json.loads(results["monthly_revenue"].to_json(orient="records")),
+        "countries": json.loads(results["country_revenue"].to_json(orient="records")),
+        "products": json.loads(results["top_products"].to_json(orient="records")),
+    }
+    template = (ROOT / "src" / "dashboard_template.html").read_text(encoding="utf-8")
+    embedded_json = json.dumps(dashboard_data, ensure_ascii=False).replace("<", "\\u003c")
+    html = template.replace("__DASHBOARD_DATA__", embedded_json)
     (REPORTS / "dashboard.html").write_text(html, encoding="utf-8")
     print("Generated:", ", ".join(f"reports/{n}.csv" for n in REPORT_NAMES))
     print("Open reports/dashboard.html to see the dashboard")
