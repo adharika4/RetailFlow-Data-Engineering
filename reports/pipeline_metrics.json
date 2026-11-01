@@ -1,0 +1,18 @@
+{
+  "raw_rows": 541909,
+  "excluded_cancellations": 9288,
+  "excluded_invalid_identifiers": 0,
+  "excluded_invalid_dates": 0,
+  "excluded_nonpositive_quantity": 1336,
+  "excluded_nonpositive_price": 1181,
+  "excluded_postage_lines": 1126,
+  "excluded_zero_rounded_revenue": 4,
+  "valid_sale_lines": 528974,
+  "identified_customer_lines": 396781,
+  "unidentified_customer_lines": 132193,
+  "distinct_invoices": 19884,
+  "revenue_gbp": "10588582.66",
+  "source_file": "Online Retail.xlsx",
+  "data_source": "UCI Online Retail (Chen, 2015)",
+  "mode": "FULL DATASET"
+}
